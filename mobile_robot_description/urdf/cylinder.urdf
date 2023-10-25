@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<robot name="cylinder">
+  <!-- 로봇의 이름을 'cylinder'로 설정합니다. -->
+  <link name="base_link">
+    <!-- 로봇에 하나의 링크(link)인 'base_link'를 정의합니다. -->
+    <visual>
+      <!-- 링크의 시각적인 표현을 정의합니다. -->
+      <geometry>
+        <!-- 시각적인 표현으로 기하학 모양을 설정합니다. -->
+        <cylinder length="0.6" radius="0.2"/>
+        <!-- 실린더 모양을 설정하며, 길이는 0.6, 반지름은 0.2로 지정합니다. -->
+      </geometry>
+    </visual>
+  </link>
+</robot>
