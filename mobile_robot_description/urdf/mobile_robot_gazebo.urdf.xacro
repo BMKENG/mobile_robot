@@ -249,5 +249,5 @@
 
   <!-- Include gazebo macro -->
   
-  <!-- <xacro:include filename="$(find mobile_robot_description)/gazebo/mobile_robot.gazebo.xacro" /> -->
+  <xacro:include filename="$(find mobile_robot_description)/gazebo/mobile_robot.gazebo.xacro" />
 </robot>

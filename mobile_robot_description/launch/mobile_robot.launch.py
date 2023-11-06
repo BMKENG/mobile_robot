@@ -19,7 +19,7 @@ def generate_launch_description():
         [
             FindPackageShare('mobile_robot_description'),
             'urdf',
-            'mobile_robot.urdf'
+            'mobile_robot.urdf.xacro'
         ]
     )
 
@@ -46,7 +46,7 @@ def generate_launch_description():
         name='joint_state_publisher',
         condition=launch.conditions.UnlessCondition(LaunchConfiguration('gui'))
     )
-    
+    # joint_state_publisher_gui를 실행하는 노드를 설정합니다.
     joint_state_publisher_gui_node = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',

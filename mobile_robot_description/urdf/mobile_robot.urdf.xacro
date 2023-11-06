@@ -246,8 +246,4 @@
     <parent link="camera_link"/>
     <child link="camera_depth_frame"/>
   </joint>
-
-  <!-- Include gazebo macro -->
-  
-  <xacro:include filename="$(find mobile_robot_description)/gazebo/mobile_robot.gazebo.xacro" />
 </robot>

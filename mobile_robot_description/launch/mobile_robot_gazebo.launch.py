@@ -19,7 +19,7 @@ def generate_launch_description():
         [
             FindPackageShare('mobile_robot_description'),
             'urdf',
-            'mobile_robot.urdf.xacro'
+            'mobile_robot_gazebo.urdf.xacro'
         ]
     )
 
