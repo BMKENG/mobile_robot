@@ -3,17 +3,17 @@ import os
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow
-
-import rclpy
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PoseWithCovarianceStamped
-
-
 from PyQt5.QtCore import QThread
 from PyQt5.QtCore import QTimer
 
+import rclpy
+
+from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import String
 from mobile_robot_interfaces.msg import NaviProgress
+
+
 
 
 if 'DISPLAY' not in os.environ:
@@ -78,7 +78,6 @@ class MobileRobotGUI(QMainWindow, form_class):
         rclpy.init()
         self.ros_node = ROSNode()
         self.ros_node.start()
-        self.joy_msg = String()
 
 
     def init_ui(self):

@@ -2,9 +2,8 @@
 
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseWithCovarianceStamped
-from nav2_msgs.action import NavigateThroughPoses, NavigateToPose
+from nav2_msgs.action import NavigateToPose
 from std_msgs.msg import String
-from std_msgs.msg import Int32
 from mobile_robot_interfaces.msg import NaviProgress
 import rclpy
 
@@ -16,7 +15,7 @@ from rclpy.qos import QoSProfile
 
 class NavigatorNode(Node):
     def __init__(self):
-        super().__init__(node_name='basic_navigator')
+        super().__init__(node_name='gui_basic_navigator')
         self.info('Navigator node started.')
         # initial pose
         self.initial_pose = Pose()
@@ -27,8 +26,6 @@ class NavigatorNode(Node):
         # nav2 action client
         self.goal_handle = None
         self.result_future = None
-        self.feedback = None
-        self.status = None
 
         self.waypoint = [
             [-1.0, -1.0, 0.0, 0.0],
@@ -38,11 +35,9 @@ class NavigatorNode(Node):
 
         # feedback을 이용한 진행률 계산 및 출력
         self.feedback_flag = False
-        # 초기 거리를 받기 위한 변수 
+        self.feedback = None
+        # 초기 거리
         self.initial_distance = 0.0
-        # 남은거리를 받기 위한 변수
-
-        self.current_pose_num = 0
         
         amcl_pose_qos = QoSProfile(
           durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
@@ -51,9 +46,6 @@ class NavigatorNode(Node):
           depth=1)
 
         self.initial_pose_received = False
-        self.nav_through_poses_client = ActionClient(self,
-                                                     NavigateThroughPoses,
-                                                     'navigate_through_poses')
         self.nav_to_pose_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         self.model_pose_sub = self.create_subscription(PoseWithCovarianceStamped,
                                                        'amcl_pose',
@@ -84,12 +76,24 @@ class NavigatorNode(Node):
             self.control_dict[msg.data]()
             self.info('Navigation command: ' + msg.data)
         else:
-            self.info('Invalid navigation command: ' + msg.data)
+            self.warn('Invalid navigation command: ' + msg.data)
 
     def setInitialPose(self):
         self.info('setInitialPose')
         self._setInitialPose()
         return
+
+    def set_waypoint(self, waypoint_num):
+        if self.current_pose is not None:
+            self.waypoint[waypoint_num][0] = self.current_pose.position.x
+            self.waypoint[waypoint_num][1] = self.current_pose.position.y
+            self.waypoint[waypoint_num][2] = self.current_pose.orientation.w
+            self.waypoint[waypoint_num][3] = self.current_pose.orientation.z
+            
+            self.info('waypoint_{}: {}'.format(waypoint_num + 1, self.waypoint[waypoint_num]))
+        else:
+            self.warn('아직 유효한 waypoint가 저장되지 않았습니다.')
+            pass
 
     def goToPose(self, waypoint_num):
         # Sends a `NavToPose` action request and waits for completion
@@ -105,13 +109,21 @@ class NavigatorNode(Node):
         goal_msg.pose.pose.orientation.w = self.waypoint[waypoint_num][2]
         goal_msg.pose.pose.orientation.z = self.waypoint[waypoint_num][3]
 
-        # self.info('Navigating to goal: ' + str(goal_msg.pose.pose.position.x) + ' ' +
-        #               str(goal_msg.pose.pose.position.y) + '...')
+        self.info('Navigating to goal: ' + str(goal_msg.pose.pose.position.x) + ' ' +
+                      str(goal_msg.pose.pose.position.y) + '...')
         self.send_goal_future = self.nav_to_pose_client.send_goal_async(goal_msg, self._feedbackCallback)
         self.feedback_flag  = False
-
         return True
 
+    def _setInitialPose(self):
+        msg = PoseWithCovarianceStamped()
+        msg.pose.pose = self.initial_pose
+        msg.header.frame_id = 'map'
+        msg.header.stamp = self.get_clock().now().to_msg()
+        self.info('Publishing Initial Pose')
+        self.initial_pose_pub.publish(msg)
+        return
+    
     # feedback을 이용한 진행률 계산 및 출력
     def getFeedback(self, num):
         if self.feedback_flag == False:
@@ -119,7 +131,6 @@ class NavigatorNode(Node):
             distance = ((self.current_pose.position.x - self.waypoint[num][0]) ** 2 + (self.current_pose.position.y - self.waypoint[num][1]) ** 2) ** 0.5
             self.initial_distance = distance
             self.feedback_flag = True
-
 
         self.remaining_distance = self.feedback.distance_remaining / self.initial_distance * 100
 
@@ -130,53 +141,23 @@ class NavigatorNode(Node):
 
         # nav 진행율 표시를 위한 publisher
         self.info('init: ' +  str(self.initial_distance) + 'remain: ' + str(100 - self.remaining_distance) + 'feedback: ' + str(self.feedback.distance_remaining))
-
-        
         msg = NaviProgress()
-
-        # 소수점 2자리까지만 표시
         msg.remaining_waypoint[0] = 100
         msg.remaining_waypoint[1] = 100
         msg.remaining_waypoint[2] = 100
         
         msg.remaining_waypoint[num] = int(100 - self.remaining_distance)
         self.pub_nav_progress.publish(msg)
-
         return self.remaining_distance
 
 
     def _amclPoseCallback(self, msg):
         self.current_pose = msg.pose.pose
         self.initial_pose_received = True
-        # print(self.current_pose)
         return
-    
-    def set_waypoint(self, waypoint_num):
-        if self.current_pose is not None:
-            self.waypoint[waypoint_num][0] = self.current_pose.position.x
-            self.waypoint[waypoint_num][1] = self.current_pose.position.y
-            self.waypoint[waypoint_num][2] = self.current_pose.orientation.w
-            self.waypoint[waypoint_num][3] = self.current_pose.orientation.z
-            
-            print('waypoint_{}: {}'.format(waypoint_num + 1, self.waypoint[waypoint_num]))
-           
-        else:
-            # self.statusBar().showMessage('아직 유효한 waypoint가 저장되지 않았습니다.')
-            print('아직 유효한 waypoint가 저장되지 않았습니다.')
-            pass
-
     def _feedbackCallback(self, msg):
         self.feedback = msg.feedback
         self.getFeedback(self.current_waypoint_num)
-        return
-
-    def _setInitialPose(self):
-        msg = PoseWithCovarianceStamped()
-        msg.pose.pose = self.initial_pose
-        msg.header.frame_id = 'map'
-        msg.header.stamp = self.get_clock().now().to_msg()
-        self.info('Publishing Initial Pose')
-        self.initial_pose_pub.publish(msg)
         return
 
     def info(self, msg):
@@ -201,10 +182,6 @@ def main(args=None):
     navigator = NavigatorNode()
     while True:
         rclpy.spin_once(navigator)
-        
-    navigator.destroy_node()
-  
-    rclpy.shutdown()
  
 
 if __name__ == '__main__':

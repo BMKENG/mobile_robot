@@ -23,7 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'navigator_node = mobile_robot_core.navigator_node:main',
-            'joystick_node = mobile_robot_core.joystick_node:main'
+            'joystick_node = mobile_robot_core.joystick_node:main',
         ],
     },
 )

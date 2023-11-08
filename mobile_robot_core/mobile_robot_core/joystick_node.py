@@ -8,11 +8,10 @@ from std_msgs.msg import String
 
 
 # joystick button이 눌리면 cmd_vel topic에 publish하는 node
-
 class JoystickNode(Node):
     def __init__(self):
         super().__init__('joystick_node')
-
+        self.info('Joystick node started.')
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 10)
         self.pub_set_vel = self.create_publisher(Twist, 'set_vel', 10)
 
@@ -42,8 +41,9 @@ class JoystickNode(Node):
     def joystick_callback(self, msg):
         if msg.data in self.control_dict:
             self.control_dict[msg.data]()
+            self.info('Joystick command: ' + msg.data)
         else:
-            self.info('Invalid joystick command: ' + msg.data)
+            self.warn('Invalid joystick command: ' + msg.data)
 
     def send_cmd_vel(self):
         msg = Twist()
@@ -84,8 +84,6 @@ class JoystickNode(Node):
         self.angular_velocity = -self.set_angular_velocity
         self.send_cmd_vel()
 
-
-
     # vel up down button
     def angular_up_button(self):
         self.set_angular_velocity += 0.1
@@ -115,6 +113,22 @@ class JoystickNode(Node):
         if self.set_linear_velocity <= 0.1:
             self.set_linear_velocity = 0.1
         self.send_set_vel()
+
+    def info(self, msg):
+        self.get_logger().info(msg)
+        return
+
+    def warn(self, msg):
+        self.get_logger().warn(msg)
+        return
+
+    def error(self, msg):
+        self.get_logger().error(msg)
+        return
+
+    def debug(self, msg):
+        self.get_logger().debug(msg)
+        return
 
 
 def main(args=None):
