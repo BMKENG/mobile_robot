@@ -1,1 +1,1 @@
-int32[3] remaining_waypoint
+int32[4] remaining_waypoint

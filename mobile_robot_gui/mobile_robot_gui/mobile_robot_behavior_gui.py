@@ -7,19 +7,18 @@ from PyQt5.QtCore import QTimer
 
 import rclpy
 from std_msgs.msg import String
-from .qt_to_ros_behavior import ROSNode
-from .mobile_robot_sub_gui import SubWindow
+from mobile_robot_gui.qt_to_ros_behavior import ROSNode
+from mobile_robot_gui.mobile_robot_sub_gui import SubWindow
+
 
 # UI 파일 경로 확장
 if 'DISPLAY' not in os.environ:
     os.environ['DISPLAY'] = ':0'
 # UI 파일 경로 확장
-ui_file_path = os.path.expanduser("~/ros2_ws/src/mobile_robot/mobile_robot_gui/ui/mobile_robot.ui")
+ui_file_path = os.path.expanduser("~/ros2_ws/src/mobile_robot/mobile_robot_gui/ui/mobile_robot_behavior.ui")
 
 # UI 파일 연결
 form_class = uic.loadUiType(ui_file_path)[0]
-
-
 
 class MobileRobotGUI(QMainWindow, form_class):
     def __init__(self):
@@ -48,35 +47,43 @@ class MobileRobotGUI(QMainWindow, form_class):
         self.linear_down.clicked.connect(self.linear_down_button)
 
         # set waypoint button
+        self.set_waypoint_0.clicked.connect(self.set_waypoint_button_0)
         self.set_waypoint_1.clicked.connect(self.set_waypoint_button_1)
         self.set_waypoint_2.clicked.connect(self.set_waypoint_button_2)
         self.set_waypoint_3.clicked.connect(self.set_waypoint_button_3)
 
         # go waypoint button
+        self.go_waypoint_0.clicked.connect(self.go_waypoint_button_0)
         self.go_waypoint_1.clicked.connect(self.go_waypoint_button_1)
         self.go_waypoint_2.clicked.connect(self.go_waypoint_button_2)
         self.go_waypoint_3.clicked.connect(self.go_waypoint_button_3)
         
         # go waypoint progress bar
+        self.progressbar_0.setValue(0)
         self.progressbar_1.setValue(0)
         self.progressbar_2.setValue(0)
         self.progressbar_3.setValue(0)
 
 
-        # emergency stop button
+        # emergency start button
         self.start.clicked.connect(self.start_button)
+        self.emergency.clicked.connect(self.emergency_button)
 
         # timer
         self.timer = QTimer(self)
         self.timer.start(100)
-        self.timer.timeout.connect(self.progressbar_update)
         
+        self.timer.timeout.connect(self.progressbar_update)
+        self.timer.timeout.connect(self.table_num_update)
+        
+
+
     # joy button
     # ====================================================== #
     def joy_cammnd(self, msg):
-        self.joy_msg = String()
-        self.joy_msg.data = msg
-        self.ros_node.pub_joystick.publish(self.joy_msg)
+        self.msg = String()
+        self.msg.data = msg
+        self.ros_node.pub_joystick.publish(self.msg)
 
     def go_button(self):
         self.joy_cammnd('go')
@@ -110,52 +117,85 @@ class MobileRobotGUI(QMainWindow, form_class):
 
     # waypoint button
     # ====================================================== #
-    def nav_cammnd(self, msg):
-        self.nav_msg = String()
-        self.nav_msg.data = msg
-        self.ros_node.pub_navigator.publish(self.nav_msg)
+    def navi_command(self, msg):
+        self.msg = String()
+        self.msg.data = msg
+        self.ros_node.pub_navigator.publish(self.msg)
+
+    def set_waypoint_button_0(self):
+        self.navi_command('set_waypoint_0')
+        self.statusBar().showMessage('set waypoint 0 : x: {}, y: {}, z: {}'.format(self.ros_node.current_pose.position.x, self.ros_node.current_pose.position.y, self.ros_node.current_pose.position.z))
 
     def set_waypoint_button_1(self):
-        self.nav_cammnd('set_waypoint_1')
+        self.navi_command('set_waypoint_1')
         self.statusBar().showMessage('set waypoint 1 : x: {}, y: {}, z: {}'.format(self.ros_node.current_pose.position.x, self.ros_node.current_pose.position.y, self.ros_node.current_pose.position.z))
 
     def set_waypoint_button_2(self):
-        self.nav_cammnd('set_waypoint_2')
+        self.navi_command('set_waypoint_2')
         self.statusBar().showMessage('set waypoint 2 : x: {}, y: {}, z: {}'.format(self.ros_node.current_pose.position.x, self.ros_node.current_pose.position.y, self.ros_node.current_pose.position.z))
 
     def set_waypoint_button_3(self):
-        self.nav_cammnd('set_waypoint_3')
+        self.navi_command('set_waypoint_3')
         self.statusBar().showMessage('set waypoint 3 : x: {}, y: {}, z: {}'.format(self.ros_node.current_pose.position.x, self.ros_node.current_pose.position.y, self.ros_node.current_pose.position.z))
 
     def start_button(self):
-        self.nav_cammnd('start_nav')
-        self.joy_cammnd('start_nav')
-        self.stop_button()
+        self.msg = String()
+        self.msg.data = 'start_nav'
+        self.ros_node.pub_init_pose.publish(self.msg)
+        self.statusBar().showMessage('start navigation')
+
+
+    def emergency_button(self):
+        self.msg = String()
+        self.msg.data = 'emergency'
+        self.ros_node.pub_emergency.publish(self.msg)
+        self.statusBar().showMessage('emergency!!!')
+        
+
+
+
 
     def progressbar_update(self):
         if self.ros_node.remaining_waypoint is not None:
-            self.progressbar_1.setValue(self.ros_node.remaining_waypoint[0])
-            self.progressbar_2.setValue(self.ros_node.remaining_waypoint[1])
-            self.progressbar_3.setValue(self.ros_node.remaining_waypoint[2])
+            self.progressbar_0.setValue(self.ros_node.remaining_waypoint[0])
+            self.progressbar_1.setValue(self.ros_node.remaining_waypoint[1])
+            self.progressbar_2.setValue(self.ros_node.remaining_waypoint[2])
+            self.progressbar_3.setValue(self.ros_node.remaining_waypoint[3])
             # self.ros_node.remaining_waypoint = None
         else:
             # feedback이 들어오지 않거나 종료된 경우 프로그래스 바를 100%로 설정
+            self.progressbar_0.setValue(100)
             self.progressbar_1.setValue(100)
             self.progressbar_2.setValue(100)
             self.progressbar_3.setValue(100)
+    def go_waypoint_button_0(self):
+        self.navi_command('go_to_pose_0')
+        self.statusBar().showMessage('go waypoint 0')
 
     def go_waypoint_button_1(self):
-        self.nav_cammnd('go_to_pose_1')
+        self.navi_command('go_to_pose_1')
         self.statusBar().showMessage('go waypoint 1')
 
     def go_waypoint_button_2(self):
-        self.nav_cammnd('go_to_pose_2')
+        self.navi_command('go_to_pose_2')
         self.statusBar().showMessage('go waypoint 2')
 
     def go_waypoint_button_3(self):
-        self.nav_cammnd('go_to_pose_3')
+        self.navi_command('go_to_pose_3')
         self.statusBar().showMessage('go waypoint 3')
     # ====================================================== #
+
+
+    # 주문 이벤트가 발생하면 테이블 번호를 받아옴
+    def table_num_update(self):
+        if self.ros_node.table_num is not None:
+            self.statusBar().showMessage('table number: {}'.format(self.ros_node.table_num))
+            self.table_num_sub_window(self.ros_node.table_num)
+
+            self.ros_node.table_num = None 
+    def table_num_sub_window(self, table_num):
+            self.sub_window.table_num = table_num
+            self.sub_window.show()
 
 
     def closeEvent(self, event):

@@ -13,6 +13,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         # 런치파일 추가 
         ('share/' + package_name + '/launch', ['launch/mobile_robot_gui.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/mobile_robot_behavior_gui.launch.py']),
+        
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -23,7 +25,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'mobile_robot_gui = mobile_robot_gui.mobile_robot_gui:main'
+            'mobile_robot_gui = mobile_robot_gui.mobile_robot_gui:main',
+            'mobile_robot_behavior_gui = mobile_robot_gui.mobile_robot_behavior_gui:main',
+            'mobile_robot_behavior_client_gui = mobile_robot_gui.mobile_robot_behavior_client_gui:main',
         ],
     },
 )
