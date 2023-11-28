@@ -46,6 +46,7 @@ class GetOrderTableNnumState(EventState):
         self._sucess = self.order_table()
         if self._sucess == True:
             userdata.table_num = self.order_table_msg.data
+            self.info("table_num : {}".format(userdata.table_num))
             return 'serving'
         else:
             pass

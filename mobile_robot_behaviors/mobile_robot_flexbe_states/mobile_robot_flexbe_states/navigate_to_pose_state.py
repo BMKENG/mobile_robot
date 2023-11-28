@@ -16,7 +16,7 @@ from std_msgs.msg import Int32
 
 class NavigateToPoseState(EventState):
 
-    def __init__(self, timeout=60.0, navi_to_pos_topic="/navigate_to_pose", emergency_topic="/emergency_cmd",
+    def __init__(self, timeout=120.0, navi_to_pos_topic="/navigate_to_pose", emergency_topic="/emergency_cmd",
                   amcl_pose_topic="/amcl_pose", navi_progress_topic="/remaining_waypoint", arrived_table_topic="/arrived_table", table_num=0):
         # See example_state.py for basic explanations.
         super().__init__(outcomes=['failed', 'done'],
@@ -96,6 +96,7 @@ class NavigateToPoseState(EventState):
     def goToPose(self, waypoint_num):
         # self.navi_cancel()
         self.table_num = waypoint_num
+        self.info(f"table_num: {self.table_num}")
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose.header.frame_id = "map"
         goal_msg.pose.pose.position.x = self.waypoint[waypoint_num][0]
@@ -118,8 +119,8 @@ class NavigateToPoseState(EventState):
                 if self.feedback_flag == False:
                     self.info(f'현재 좌표: {self.current_pose.position.x}, {self.current_pose.position.y}')
                     # 여기서 self.waypoint[0][0]과 self.waypoint[0][1]은 첫 번째 웨이포인트의 x, y 좌표를 의미합니다.
-                    self.initial_distance = ((self.current_pose.position.x - self.waypoint[0][0]) ** 2 + 
-                                            (self.current_pose.position.y - self.waypoint[0][1]) ** 2) ** 0.5
+                    self.initial_distance = ((self.current_pose.position.x - self.waypoint[self.table_num][0]) ** 2 + 
+                                            (self.current_pose.position.y - self.waypoint[self.table_num][1]) ** 2) ** 0.5
                     self.feedback_flag = True
 
                 # 여기서는 int로 변환하지 않고, float 값을 유지합니다.
@@ -133,7 +134,7 @@ class NavigateToPoseState(EventState):
                 # 100에서 빼서 남은 거리의 백분율을 계산합니다.
                 self.remaining_distance = 100 - self.remaining_distance
                 self.naviprog.remaining_waypoint[self.table_num] = self.remaining_distance
-                self.info(f'진행률: {self.remaining_distance}')
+                # self.info(f'진행률: {self.remaining_distance}')
                 self.remaining_waypoint_pub.publish(self.navi_progress_topic, self.naviprog)
             else:
                 self.warn("Feedback received but doesn't contain 'distance_remaining'")
@@ -161,8 +162,8 @@ class NavigateToPoseState(EventState):
             self._sucess = True
 
         # 만약 시간안에 목표를 달성하지 못하면 failed 60초
-        if self._start_time + self._timeout < self._node.get_clock().now():
-            self._failed = True
+        # if self._start_time + self._timeout < self._node.get_clock().now():
+        #     self._failed = True
 
         
     

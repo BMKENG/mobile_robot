@@ -31,10 +31,10 @@ class SetWaypointState(EventState):
         self.waypoint_num = None    
 
         # 초기위치 저장변수 
-        self.waypoint = [[0.0, 0.0, 0.0, 0.0],
-                         [1.0, 1.0, 1.0, 1.0],
-                         [2.0, 2.0, 2.0, 2.0],
-                         [3.0, 3.0, 3.0, 3.0]] 
+        self.waypoint = [[0.0, -1.0, 1.0, 1.0],
+                         [2.0, -1.0, 1.0, 1.0],
+                         [-1.5, 2.5, 1.0, 1.0],
+                         [1.9, 3.0, 1.0, 1.0]] 
 
 
         self.control_dict = {
