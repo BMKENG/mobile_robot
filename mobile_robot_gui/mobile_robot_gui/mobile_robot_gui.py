@@ -7,8 +7,7 @@ from PyQt5.QtCore import QTimer
 
 import rclpy
 from std_msgs.msg import String
-from .qt_to_ros_behavior import ROSNode
-from .mobile_robot_sub_gui import SubWindow
+from mobile_robot_gui.qt_to_ros import ROSNode
 
 # UI 파일 경로 확장
 if 'DISPLAY' not in os.environ:
@@ -29,8 +28,6 @@ class MobileRobotGUI(QMainWindow, form_class):
         # init ros
         rclpy.init()
         self.ros_node = ROSNode()
-        # sub window init
-        self.sub_window = SubWindow(self.ros_node)
         self.ros_node.start()
 
 
@@ -129,7 +126,6 @@ class MobileRobotGUI(QMainWindow, form_class):
 
     def start_button(self):
         self.nav_cammnd('start_nav')
-        self.joy_cammnd('start_nav')
         self.stop_button()
 
     def progressbar_update(self):
@@ -137,12 +133,13 @@ class MobileRobotGUI(QMainWindow, form_class):
             self.progressbar_1.setValue(self.ros_node.remaining_waypoint[0])
             self.progressbar_2.setValue(self.ros_node.remaining_waypoint[1])
             self.progressbar_3.setValue(self.ros_node.remaining_waypoint[2])
-            # self.ros_node.remaining_waypoint = None
+            self.ros_node.remaining_waypoint = None
         else:
             # feedback이 들어오지 않거나 종료된 경우 프로그래스 바를 100%로 설정
             self.progressbar_1.setValue(100)
             self.progressbar_2.setValue(100)
             self.progressbar_3.setValue(100)
+        # print("asdasd")
 
     def go_waypoint_button_1(self):
         self.nav_cammnd('go_to_pose_1')

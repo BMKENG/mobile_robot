@@ -40,12 +40,6 @@ class ROSNode(QThread):
         self.pub_joystick = self.node.create_publisher(String, 'joystick', 10)
         self.pub_navigator = self.node.create_publisher(String, 'navigator', 10)
 
-        # 로봇 출발을 위한 명령
-        self.pub_start_nav = self.node.create_publisher(Int32, 'start_nav', 10)
-        # 주문 받은 table number
-        self.sub_table_num = self.node.create_subscription(Int32, 'order_table',
-         self.table_num_callback, 10)
-
 
         while rclpy.ok() and self._is_running:
             rclpy.spin_once(self.node)
@@ -64,7 +58,7 @@ class ROSNode(QThread):
 
     def remaining_waypoint_callback(self, msg):
         self.remaining_waypoint = msg.remaining_waypoint
-        print(self.remaining_waypoint)
+        # print(self.remaining_waypoint)
     
     def table_num_callback(self, msg):
         self.table_num = msg.data
