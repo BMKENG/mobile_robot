@@ -41,7 +41,9 @@ class ROSNode(QThread):
         self.pub_navigator = self.node.create_publisher(String, 'navi_cmd', 10)
         self.pub_emergency = self.node.create_publisher(String, 'emergency_cmd', 10)
         self.pub_init_pose = self.node.create_publisher(String, 'init_pose_cmd', 10)
-        
+        self.pub_order_table = self.node.create_publisher(Int32, 'order_table', 10)
+
+
         # 로봇 출발을 위한 명령
         self.pub_start_nav = self.node.create_publisher(Int32, 'start_nav', 10)
         # 주문 받은 table number

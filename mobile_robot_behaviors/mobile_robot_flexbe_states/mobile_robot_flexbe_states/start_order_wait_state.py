@@ -42,7 +42,6 @@ class StartOrder_waitState(EventState):
 
         self.start_navi_msg = self.sub_start_navi.get_last_msg(self.start_navi_topic)
         if self.start_navi_msg is not None:
-            self.start_navi_msg = self.start_navi_msg
             self.sub_start_navi.remove_last_msg(self.start_navi_topic)
             self.start_navi_msg = None
             return True

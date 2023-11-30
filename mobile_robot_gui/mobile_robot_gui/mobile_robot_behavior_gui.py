@@ -7,6 +7,7 @@ from PyQt5.QtCore import QTimer
 
 import rclpy
 from std_msgs.msg import String
+from std_msgs.msg import Int32
 from mobile_robot_gui.qt_to_ros_behavior import ROSNode
 from mobile_robot_gui.mobile_robot_sub_gui import SubWindow
 
@@ -168,27 +169,47 @@ class MobileRobotGUI(QMainWindow, form_class):
             self.progressbar_1.setValue(100)
             self.progressbar_2.setValue(100)
             self.progressbar_3.setValue(100)
+
+
     def go_waypoint_button_0(self):
-        self.navi_command('go_to_pose_0')
+        self.navi_command('go_to_pose_0') 
+        int_msg = Int32()
+        int_msg.data = 0
+        self.ros_node.pub_order_table.publish(int_msg)
+        
         self.statusBar().showMessage('go waypoint 0')
 
     def go_waypoint_button_1(self):
         self.navi_command('go_to_pose_1')
+        int_msg = Int32()
+        int_msg.data = 1
+        self.ros_node.pub_order_table.publish(int_msg)
+        
+      
         self.statusBar().showMessage('go waypoint 1')
 
     def go_waypoint_button_2(self):
         self.navi_command('go_to_pose_2')
+        int_msg = Int32()
+        int_msg.data = 2
+        self.ros_node.pub_order_table.publish(int_msg)
+      
         self.statusBar().showMessage('go waypoint 2')
 
     def go_waypoint_button_3(self):
         self.navi_command('go_to_pose_3')
+        # self.ros_node.table_num = 3
+        int_msg = Int32()
+        int_msg.data = 3
+        self.ros_node.pub_order_table.publish(int_msg)
+      
         self.statusBar().showMessage('go waypoint 3')
     # ====================================================== #
 
 
     # 주문 이벤트가 발생하면 테이블 번호를 받아옴
     def table_num_update(self):
-        if self.ros_node.table_num is not None:
+        if self.ros_node.table_num is not None and self.ros_node.table_num != 0:
             self.statusBar().showMessage('table number: {}'.format(self.ros_node.table_num))
             self.table_num_sub_window(self.ros_node.table_num)
 

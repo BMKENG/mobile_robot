@@ -7,13 +7,12 @@ from flexbe_core.proxy import ProxyPublisher
 from flexbe_core.proxy import ProxySubscriberCached
 
 # navigate to pose 
-from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import String
 
 class InitPoseState(EventState):
 
-    def __init__(self, init_pose_topic="/initialpose", init_pose_cmd_topic="/init_pose_cmd"):
+    def __init__(self, init_pose_topic="/initialpose", init_pose_cmd_topic="/init_pose_cmd", waypoint=[0.0, 0.0, 0.0, 1.0]):
 
         super().__init__(outcomes=['done'])
         self.init_pose_topic = init_pose_topic
@@ -21,6 +20,12 @@ class InitPoseState(EventState):
 
         self.init_pose_pub = ProxyPublisher({self.init_pose_topic: PoseWithCovarianceStamped})
         self.init_pose = PoseWithCovarianceStamped()
+        self.init_pose.header.frame_id = "map"
+        self.init_pose.pose.pose.position.x = waypoint[0]
+        self.init_pose.pose.pose.position.y = waypoint[1]
+        self.init_pose.pose.pose.position.z = waypoint[2]
+        self.init_pose.pose.pose.orientation.w = waypoint[3]
+
 
         self.init_pose_cmd_sub = ProxySubscriberCached({self.init_pose_cmd_topic: String})
         
@@ -34,8 +39,6 @@ class InitPoseState(EventState):
             return False
         
         if self.msg.data == "start_nav":
-            self.init_pose.header.frame_id = "map"
-            self.init_pose.pose.pose.orientation.w = 1.0
             self.init_pose_pub.publish(self.init_pose_topic, self.init_pose)
             self.init_pose_cmd_sub.remove_last_msg(self.init_pose_cmd_topic)
             self.info("init_pose update")
