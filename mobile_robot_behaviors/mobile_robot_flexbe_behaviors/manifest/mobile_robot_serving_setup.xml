@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="mobile_robot_serving_setup">
+
+    <executable package_path="mobile_robot_flexbe_behaviors.mobile_robot_serving_setup_sm" class="mobile_robot_serving_setupSM" />
+    <tagstring>Serving FSM</tagstring>
+    <author>ggh-png</author>
+    <date>Tue Dec 05 2023</date>
+    <description>
+        Mobile Robot Serviing Setup
+    </description>
+
+
+    <!-- Contained Behaviors -->
+
+    <!-- Available Parameters -->
+
+</behavior>
