@@ -176,7 +176,7 @@
   
   <gazebo reference="camera_link">
     <material>Gazebo/Red</material>
-    <sensor type="camera" name="pi_camera">
+    <sensor type="camera" name="camera">
       <update_rate>30</update_rate>
       <always_on>true</always_on>
       <visualize>${camera_visual}</visualize>

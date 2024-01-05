@@ -36,6 +36,7 @@ from flexbe_core import ConcurrencyContainer
 from flexbe_core import Logger
 from flexbe_core import OperatableStateMachine
 from flexbe_core import PriorityContainer
+from mobile_robot_flexbe_states.init_pose_state import InitPoseState
 from mobile_robot_flexbe_states.joystick_state import JoystickState
 from mobile_robot_flexbe_states.set_waypoint_state import SetWaypointState
 
@@ -50,6 +51,7 @@ class mobile_robot_serving_setupSM(Behavior):
     Define mobile_robot_serving_setup.
 
     Mobile Robot Serviing Setup
+
     """
 
     def __init__(self, node):
@@ -63,6 +65,7 @@ class mobile_robot_serving_setupSM(Behavior):
         ConcurrencyContainer.initialize_ros(node)
         PriorityContainer.initialize_ros(node)
         Logger.initialize(node)
+        InitPoseState.initialize_ros(node)
         JoystickState.initialize_ros(node)
         SetWaypointState.initialize_ros(node)
 
@@ -75,8 +78,8 @@ class mobile_robot_serving_setupSM(Behavior):
 
     def create(self):
         waypoint = [[0.0, -1.0, 1.0, 1.0],[2.0, -1.0, 1.0, 1.0],[-1.5, 2.5, 1.0, 1.0],[1.9, 3.0, 1.0, 1.0]]
-        # x:359 y:425
-        _state_machine = OperatableStateMachine(outcomes=['setup_finished'])
+        # x:660 y:315
+        _state_machine = OperatableStateMachine(outcomes=['setup_finished'], output_keys=['waypoint'])
         _state_machine.userdata.waypoint = waypoint
 
         # Additional creation code can be added inside the following tags
@@ -84,13 +87,19 @@ class mobile_robot_serving_setupSM(Behavior):
 
         # [/MANUAL_CREATE]
         with _state_machine:
-            # x:205 y:109
+            # x:93 y:80
+            OperatableStateMachine.add('init_pose_state',
+                                       InitPoseState(init_pose_topic='/initialpose', init_pose_cmd_topic='/init_pose_cmd', waypoint=[0.0, 0.0, 0.0, 1.0]),
+                                       transitions={'done': 'joystick_state'},
+                                       autonomy={'done': Autonomy.Off})
+
+            # x:283 y:147
             OperatableStateMachine.add('joystick_state',
                                        JoystickState(set_angular_vel=0.5, set_linear_vel=0.5, joystick_topic='/joy_cmd', cmd_vel_topic='/cmd_vel', set_vel_topic='/set_vel'),
                                        transitions={'done': 'set_waypoint_state'},
                                        autonomy={'done': Autonomy.Off})
 
-            # x:375 y:204
+            # x:442 y:257
             OperatableStateMachine.add('set_waypoint_state',
                                        SetWaypointState(amcl_pose_topic='/amcl_pose', navigator_topic='/navi_cmd'),
                                        transitions={'done': 'setup_finished'},
