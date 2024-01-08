@@ -33,6 +33,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     start_rviz = LaunchConfiguration('start_rviz')
     use_sim = LaunchConfiguration('use_sim')
+    # use_sim = False
     map_yaml_file = LaunchConfiguration('map_yaml_file')
     params_file = LaunchConfiguration('params_file')
     default_bt_xml_filename = LaunchConfiguration('default_bt_xml_filename')
@@ -93,7 +94,8 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'use_sim',
-            default_value='true',
+            
+            default_value='false',
             description='Start robot in Gazebo simulation'),
 
         DeclareLaunchArgument(

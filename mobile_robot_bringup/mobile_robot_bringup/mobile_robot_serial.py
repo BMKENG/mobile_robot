@@ -6,23 +6,35 @@ import rclpy as rp
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import JointState
+
+
+from rclpy.logging import get_logger
+from rclpy.parameter import Parameter
+from time import sleep
+import time
+import copy
+import math
+from geometry_msgs.msg import Twist, Pose, Point, Vector3, Quaternion, TransformStamped
+from nav_msgs.msg import Odometry
+from tf2_ros import TransformBroadcaster
 
 
 from time import sleep
 # 멀티 스레드
 from rclpy.executors import MultiThreadedExecutor
 
-# 1의 보수를 구하는 함수
-def ones_complement(number, bit_length):
-    complement = ~number & ((1 << bit_length) - 1)
-    return complement
 
 
 class RPMOdom(Node):
     def __init__(self):
         super().__init__('mobile_robot_serial')
         # 오돔 값을 발행하기 위한 publisher
-        self.publisher = self.create_publisher(Odometry, '/odom', 10)
+        self.odometry_publisher = self.create_publisher(Odometry, '/odom', 10)
+        self.joint_state_publisher = self.create_publisher(JointState, '/joint_states', 10)
+        self.odometry_tf_publisher = TransformBroadcaster(self)
+
         self.serial_port = '/dev/ttyACM0'  # 시리얼 포트 경로
         self.baud_rate = 115200  # 시리얼 통신 속도
 
@@ -38,8 +50,9 @@ class RPMOdom(Node):
         self.timer_period = 0.1  # 주기 (단위: 초)
         self.timer = self.create_timer(self.timer_period, self.read_rpm)
         self.ser = serial.Serial(self.serial_port, self.baud_rate)
-
-
+        # 바퀴 초기 각도
+        self.left_wheel_angle = 0.0
+        self.right_wheel_angle = 0.0
 
             
     def read_rpm(self):
@@ -47,17 +60,14 @@ class RPMOdom(Node):
             # 시리얼 포트로부터 rpm 값을 읽어옴
 
             received_data = self.ser.readline().decode().strip()
-
+            # data example: (100, 100)
             # 데이터 길이 검증 및 정상 데이터인 경우
-            if re.match(r'^-?\d+\.\d+, -?\d+\.\d+$', received_data):
-
+            if received_data.startswith('(') and received_data.endswith(')') and received_data.count('(') == 1 and received_data.count(')') == 1:
+                print(received_data)
                 split_data = received_data.split(',')
-                if len(split_data) != 2:
-                    raise ValueError("Invalid data format")
+                data1 = split_data[0][1:]
+                data2 = split_data[1][:-1]
 
-                # '-' 기호가 여러 개 있는 경우 처리
-                data1 = split_data[0].replace('-', '') if split_data[0].count('-') > 1 else split_data[0]
-                data2 = split_data[1].replace('-', '') if split_data[1].count('-') > 1 else split_data[1]
                 # print(data1, data2)
                 # rp.loginfo("data1: %s, data2: %s", data1, data2)
                 # 문자열을 부동 소수점으로 변환
@@ -71,7 +81,7 @@ class RPMOdom(Node):
                 # 이동 거리 및   방향 갱신
                 distance = (left_wheel_vel + right_wheel_vel) / 2.0
                 self.orientation_z += (right_wheel_vel - left_wheel_vel) / self.wheel_base
-                print(distance, self.orientation_z)
+                # print(distance, self.orientation_z)
                 # 위치 업데이트
                 self.position_x += distance * math.cos(self.orientation_z)
                 self.position_y += distance * math.sin(self.orientation_z)
@@ -81,12 +91,37 @@ class RPMOdom(Node):
                 odometry.header = Header()
                 odometry.header.stamp = self.get_clock().now().to_msg()
                 odometry.header.frame_id = 'odom'
-                odometry.child_frame_id = 'base_link'
+                odometry.child_frame_id = 'base_footprint'
                 odometry.pose.pose.position.x = self.position_x
                 odometry.pose.pose.position.y = self.position_y
                 odometry.pose.pose.orientation.z = math.sin(self.orientation_z / 2.0)
                 odometry.pose.pose.orientation.w = math.cos(self.orientation_z / 2.0)
-                self.publisher.publish(odometry)
+                self.odometry_publisher.publish(odometry)
+
+                # TF 메시지 생성 및 발행
+                odom_tf = TransformStamped()
+                odom_tf.header.stamp = self.get_clock().now().to_msg()
+                odom_tf.header.frame_id = odometry.header.frame_id
+                odom_tf.child_frame_id = odometry.child_frame_id
+                odom_tf.transform.translation.x = odometry.pose.pose.position.x
+                odom_tf.transform.translation.y = odometry.pose.pose.position.y
+                odom_tf.transform.translation.z = odometry.pose.pose.position.z 
+                odom_tf.transform.rotation = odometry.pose.pose.orientation
+                self.odometry_tf_publisher.sendTransform(odom_tf)
+
+
+                #  joint_state 메시지 생성 및 발행
+                self.left_wheel_angle += left_wheel_vel * 0.6 / (self.wheel_radius)
+                self.right_wheel_angle += right_wheel_vel * 0.6 / (self.wheel_radius) 
+                joint_state = JointState()
+                joint_state.header.frame_id = 'base_footprint'
+                joint_state.header.stamp = self.get_clock().now().to_msg()
+                joint_state.name = ['left_wheel_joint', 'right_wheel_joint']  # 관절 이름 설정
+                joint_state.position = [self.left_wheel_angle, self.right_wheel_angle]  # 관절의 위치(각도) 설정
+                joint_state.velocity = [left_wheel_vel, right_wheel_vel]  # 관절의 속도 설정
+                joint_state.effort = []  # 관절의 힘 또는 토크 (선택적)
+
+                self.joint_state_publisher.publish(joint_state)
     
         except serial.SerialException as e:
             print(f"SerialException: {e}")
@@ -121,7 +156,8 @@ class cmd_vel_2_rpm(Node):
         right_wheel_rpm = (right_wheel_vel * 60 / (2 * 3.14159))
         ser = serial.Serial(self.serial_port, self.baud_rate)
         # 시리얼 포트로 RPM 값을 전송
-        send_data = str(int(left_wheel_rpm)) + ',' + str(int(right_wheel_rpm)) + '\n'
+        # data example: (100, 100)
+        send_data = f"({left_wheel_rpm}, {right_wheel_rpm})\n" 
         ser.write(send_data.encode())
 
 

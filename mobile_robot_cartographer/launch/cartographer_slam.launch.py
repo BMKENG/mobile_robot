@@ -13,6 +13,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     start_rviz = LaunchConfiguration('start_rviz')
     use_sim = LaunchConfiguration('use_sim')
+    use_sim = False
 
     # Cartographer 설정 파일이 있는 디렉토리 경로 설정
     cartographer_config_dir = PathJoinSubstitution(
