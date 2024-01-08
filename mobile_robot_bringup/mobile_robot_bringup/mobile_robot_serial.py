@@ -7,7 +7,7 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
 from geometry_msgs.msg import Twist
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState 
 
 
 from rclpy.logging import get_logger
@@ -140,7 +140,8 @@ class cmd_vel_2_rpm(Node):
         self.subscription  # prevent unused variable warning
         self.wheel_radius = 0.0379  # 바퀴 반지름 (단위: m/)
         self.wheel_base = 0.15477  # 바퀴 베이스 (단위: m)/
-
+        self.ser = serial.Serial(self.serial_port, self.baud_rate)
+        self.ser.write(b"(0, 0)\n")  # 초기 속도 0으로 설정
 
     def cmd_vel_callback(self, msg):
         linear_vel = msg.linear.x  # 선속도(m/s)
@@ -154,11 +155,10 @@ class cmd_vel_2_rpm(Node):
         left_wheel_rpm = (left_wheel_vel * 60 / (2 * 3.14159))
         # 우측 바퀴 RPM 값을 발행
         right_wheel_rpm = (right_wheel_vel * 60 / (2 * 3.14159))
-        ser = serial.Serial(self.serial_port, self.baud_rate)
         # 시리얼 포트로 RPM 값을 전송
         # data example: (100, 100)
         send_data = f"({left_wheel_rpm}, {right_wheel_rpm})\n" 
-        ser.write(send_data.encode())
+        self.ser.write(send_data.encode())
 
 
 
