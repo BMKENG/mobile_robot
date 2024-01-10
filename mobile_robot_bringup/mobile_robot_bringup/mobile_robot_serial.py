@@ -1,27 +1,16 @@
 
 import math 
-import re
 import serial
 import rclpy as rp
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TransformStamped
+from tf2_ros import TransformBroadcaster
 from sensor_msgs.msg import JointState 
 
-
-from rclpy.logging import get_logger
-from rclpy.parameter import Parameter
 from time import sleep
-import time
-import copy
-import math
-from geometry_msgs.msg import Twist, Pose, Point, Vector3, Quaternion, TransformStamped
-from nav_msgs.msg import Odometry
-from tf2_ros import TransformBroadcaster
 
-
-from time import sleep
 # 멀티 스레드
 from rclpy.executors import MultiThreadedExecutor
 
@@ -47,7 +36,7 @@ class RPMOdom(Node):
         self.orientation_z = 0.0
 
         # 타이머 설정
-        self.timer_period = 0.1  # 주기 (단위: 초)
+        self.timer_period = 0.05 # 20Hz
         self.timer = self.create_timer(self.timer_period, self.read_rpm)
         self.ser = serial.Serial(self.serial_port, self.baud_rate)
         # 바퀴 초기 각도
@@ -137,7 +126,6 @@ class cmd_vel_2_rpm(Node):
         self.subscription = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         self.serial_port = '/dev/ttyACM0'  # 시리얼 포트 경로
         self.baud_rate = 115200  # 시리얼 통신 속도
-        self.subscription  # prevent unused variable warning
         self.wheel_radius = 0.0379  # 바퀴 반지름 (단위: m/)
         self.wheel_base = 0.15477  # 바퀴 베이스 (단위: m)/
         self.ser = serial.Serial(self.serial_port, self.baud_rate)
