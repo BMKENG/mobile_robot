@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration
-from launch.substitutions import PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
 
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 from launch.actions import ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -28,14 +23,14 @@ def generate_launch_description():
             "run",
             "tf2_ros",
             "static_transform_publisher",
+            "-0.045",
+            "0",
+            "0.3",
+            "3.14159265359",
             "0",
             "0",
-            "0.1",
-            "-3.141592",
-            "0",
-            "0",
-            "base_link",
-            "laser",
+            "base_footprint",
+            "laser_frame",
         ],
         output="screen",
     )

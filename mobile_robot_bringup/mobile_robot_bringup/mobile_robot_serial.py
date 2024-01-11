@@ -27,8 +27,8 @@ class RPMOdom(Node):
         self.serial_port = '/dev/ttyACM0'  # 시리얼 포트 경로
         self.baud_rate = 115200  # 시리얼 통신 속도
 
-        self.wheel_radius = 0.0379  # 바퀴 반지름 (단위: m/)
-        self.wheel_base = 0.15477  # 바퀴 베이스 (단위: m)/
+        self.wheel_radius = 0.0315  # 바퀴 반지름 (단위: m/)
+        self.wheel_base = 0.1673  # 바퀴 베이스 (단위: m)/
 
         # 초기 위치와 방향
         self.position_x = 0.0
@@ -60,8 +60,8 @@ class RPMOdom(Node):
                 # print(data1, data2)
                 # rp.loginfo("data1: %s, data2: %s", data1, data2)
                 # 문자열을 부동 소수점으로 변환
-                left_rpm = float(data1) / 600.0
-                right_rpm = float(data2) / 600.0
+                left_rpm = float(data2) / 600.0
+                right_rpm = float(data1) / 600.0
                 # print(left_rpm, right_rpm)
                 # 좌측, 우측 바퀴의 선속도 계산
                 left_wheel_vel = (2 * math.pi * self.wheel_radius * left_rpm) 
@@ -126,8 +126,8 @@ class cmd_vel_2_rpm(Node):
         self.subscription = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         self.serial_port = '/dev/ttyACM0'  # 시리얼 포트 경로
         self.baud_rate = 115200  # 시리얼 통신 속도
-        self.wheel_radius = 0.0379  # 바퀴 반지름 (단위: m/)
-        self.wheel_base = 0.15477  # 바퀴 베이스 (단위: m)/
+        self.wheel_radius = 0.0315  # 바퀴 반지름 (단위: m/)
+        self.wheel_base = 0.1673  # 바퀴 베이스 (단위: m)/
         self.ser = serial.Serial(self.serial_port, self.baud_rate)
         self.ser.write(b"(0, 0)\n")  # 초기 속도 0으로 설정
 
@@ -136,8 +136,8 @@ class cmd_vel_2_rpm(Node):
         angular_vel = msg.angular.z  # 각속도(rad/s)
 
         # 좌측, 우측 바퀴의 선속도 계산
-        left_wheel_vel = (linear_vel - angular_vel * self.wheel_base / 2) / self.wheel_radius
-        right_wheel_vel = (linear_vel + angular_vel * self.wheel_base / 2) / self.wheel_radius
+        right_wheel_vel = (linear_vel - angular_vel * self.wheel_base / 2) / self.wheel_radius
+        left_wheel_vel = (linear_vel + angular_vel * self.wheel_base / 2) / self.wheel_radius
 
         # 좌측 바퀴 RPM 값을 발행
         left_wheel_rpm = (left_wheel_vel * 60 / (2 * 3.14159))
