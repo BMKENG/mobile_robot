@@ -47,7 +47,7 @@ def generate_launch_description():
             [
                 FindPackageShare('mobile_robot_nav2'),
                 'map',
-                'map.yaml'
+                'map2.yaml'
             ]
         )
     )

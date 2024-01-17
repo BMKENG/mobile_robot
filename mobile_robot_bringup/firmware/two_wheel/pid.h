@@ -162,7 +162,7 @@ void M1RPM(){
   
   M1t_k = millis();//시간측정 
   M1dt = M1t_k - M1t_k_1;//시간변화율
-  if(M1dt >= 50){
+  if(M1dt >= 10){
     e1cnt_k = e1cnt; 
     d_e1cnt = e1cnt_k - e1cnt_k_1;// 엔코더 값
     m1_speed = d_e1cnt * 60000/rotation;
@@ -176,7 +176,7 @@ void M2RPM(){
   
   M2t_k = millis();//시간측정 
   M2dt = M2t_k - M2t_k_1;//시간변화율
-  if(M2dt >= 50){
+  if(M2dt >= 10){
     e2cnt_k = e2cnt; 
     d_e2cnt = e2cnt_k - e2cnt_k_1;// 엔코더 값
     // ms -> min 변환

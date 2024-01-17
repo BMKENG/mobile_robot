@@ -11,7 +11,7 @@ void setup() {
   
   Timer2.setChannel1Mode(TIMER_OUTPUTCOMPARE);
   // 1000us(1ms) 에 한번씩 타이머 발생하게 설정
-  Timer2.setPeriod(50000);  //50,000 us = 50ms
+  Timer2.setPeriod(10000);  //50,000 us = 50ms
   Timer2.attachCompare1Interrupt(t2_ISR);
 }
 

@@ -36,7 +36,7 @@ class RPMOdom(Node):
         self.orientation_z = 0.0
 
         # 타이머 설정
-        self.timer_period = 0.05 # 20Hz
+        self.timer_period = 0.01 # 20Hz
         self.timer = self.create_timer(self.timer_period, self.read_rpm)
         self.ser = serial.Serial(self.serial_port, self.baud_rate)
         # 바퀴 초기 각도
@@ -52,7 +52,7 @@ class RPMOdom(Node):
             # data example: (100, 100)
             # 데이터 길이 검증 및 정상 데이터인 경우
             if received_data.startswith('(') and received_data.endswith(')') and received_data.count('(') == 1 and received_data.count(')') == 1:
-                print(received_data)
+                # print(received_data)
                 split_data = received_data.split(',')
                 data1 = split_data[0][1:]
                 data2 = split_data[1][:-1]
@@ -60,8 +60,8 @@ class RPMOdom(Node):
                 # print(data1, data2)
                 # rp.loginfo("data1: %s, data2: %s", data1, data2)
                 # 문자열을 부동 소수점으로 변환
-                left_rpm = float(data2) / 600.0
-                right_rpm = float(data1) / 600.0
+                left_rpm = float(data2) / 6000.0 
+                right_rpm = float(data1) / 6000.0
                 # print(left_rpm, right_rpm)
                 # 좌측, 우측 바퀴의 선속도 계산
                 left_wheel_vel = (2 * math.pi * self.wheel_radius * left_rpm) 
@@ -115,7 +115,7 @@ class RPMOdom(Node):
         except serial.SerialException as e:
             print(f"SerialException: {e}")
             self.ser.close()
-            sleep(0.1)  # 재연결 전에 잠시 대기
+            sleep(0.001)  # 재연결 전에 잠시 대기
             self.ser.open()
 
 
